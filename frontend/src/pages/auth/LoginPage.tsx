@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
@@ -10,6 +11,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,7 +20,14 @@ export default function LoginPage() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login gagal');
+      const message = err instanceof Error ? err.message : 'Login gagal';
+      if (message.toLowerCase().includes('password') || message.toLowerCase().includes('invalid') || message.toLowerCase().includes('credential')) {
+        setError('Password salah. Silakan coba lagi.');
+      } else if (message.toLowerCase().includes('email') || message.toLowerCase().includes('user')) {
+        setError('Email tidak ditemukan.');
+      } else {
+        setError(message);
+      }
     }
   };
 
@@ -54,13 +63,23 @@ export default function LoginPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Password
             </label>
-            <Input
-              type="password"
-              placeholder="Masukkan password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Masukkan password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
           </div>
 
           <Button type="submit" className="w-full" disabled={isLoading}>
