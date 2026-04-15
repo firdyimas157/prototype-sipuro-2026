@@ -14,7 +14,16 @@ import auditRoutes from './routes/audit.routes';
 const app: Application = express();
 
 app.use(helmet());
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://prototype-sipuro-2026-k2nx.vercel.app',
+];
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
