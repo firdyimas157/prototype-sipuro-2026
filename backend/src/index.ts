@@ -18,6 +18,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'https://prototype-sipuro-2026-k2nx.vercel.app',
+  ...(process.env.VERCEL_URL ? [`https://${process.env.VERCEL_URL}`] : []),
 ];
 
 app.use(cors({
@@ -57,4 +58,7 @@ app.listen(PORT, async () => {
   }
 });
 
+// For Vercel serverless function deployment - export the Express app as handler
+// Vercel handles the listening and scaling automatically
+  
 export default app;
