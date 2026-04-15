@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  roleId    String   @id @default(uuid())
+  roleName String   @unique
+  users    User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  userId        String   @id @default(uuid())
+  email         String   @unique
+  passwordHash  String
+  fullName      String
+  phoneNumber   String?
+  roleId        String
+  role          Role     @relation(fields: [roleId], references: [roleId])
+  doctorProfile DoctorProfile?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  schedules         Schedule[]
+  rescheduleHistory RescheduleHistory[]
+  auditLogs         AuditLog[]
+}
+
+model DoctorProfile {
+  doctorId        String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [userId])
+  specialty       String?
+  licenseNumber   String?
+  departmentName  String?
+  schedules       Schedule[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Patient {
+  patientId            String   @id @default(uuid())
+  medicalRecordNumber String?  @unique
+  fullName            String
+  address             String?
+  phoneNumber         String
+  diagnosis           String?
+  birthDate           DateTime?
+  gender              String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  schedules     Schedule[]
+  notifications Notification[]
+}
+
+model Schedule {
+  scheduleId       String   @id @default(uuid())
+  patientId        String
+  patient          Patient  @relation(fields: [patientId], references: [patientId])
+  doctorId         String
+  doctor           DoctorProfile @relation(fields: [doctorId], references: [doctorId])
+  createdByUserId  String
+  createdByUser    User     @relation(fields: [createdByUserId], references: [userId])
+  scheduledStart   DateTime
+  scheduledEnd     DateTime
+  priorityLevel    String   @default("NORMAL")
+  status           String   @default("WAITING")
+  operationRoom    String?
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  rescheduleHistory RescheduleHistory[]
+  notifications     Notification[]
+}
+
+model RescheduleHistory {
+  rescheduleId       String   @id @default(uuid())
+  scheduleId         String
+  schedule           Schedule @relation(fields: [scheduleId], references: [scheduleId])
+  changedByUserId    String
+  changedByUser      User     @relation(fields: [changedByUserId], references: [userId])
+  oldScheduledStart  DateTime
+  oldScheduledEnd    DateTime
+  newScheduledStart  DateTime
+  newScheduledEnd    DateTime
+  reason             String
+  changedAt          DateTime  @default(now())
+}
+
+model Notification {
+  notificationId  String   @id @default(uuid())
+  scheduleId      String
+  schedule        Schedule @relation(fields: [scheduleId], references: [scheduleId])
+  patientId       String
+  patient         Patient  @relation(fields: [patientId], references: [patientId])
+  channel         String   @default("WHATSAPP")
+  templateCode    String?
+  deliveryStatus String   @default("PENDING")
+  messagePreview String?
+  sentAt          DateTime?
+  createdAt       DateTime  @default(now())
+}
+
+model AuditLog {
+  auditId     String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [userId])
+  entityName  String
+  entityId    String
+  actionType  String
+  oldValue    String?
+  newValue    String?
+  createdAt   DateTime  @default(now())
+}
